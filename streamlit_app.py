@@ -5,7 +5,7 @@ import pandas as pd
 @st.cache_data
 def load_data():
     # Make sure this filename matches your uploaded file exactly
-    file_name = 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv'
+    file_name = 'your_spreadsheet.csv'
     df = pd.read_csv(file_name)
     
     # Clean column names (removes hidden spaces like 'Resource Type ')
