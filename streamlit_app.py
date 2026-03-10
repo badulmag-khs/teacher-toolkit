@@ -56,8 +56,8 @@ try:
     # 3. Filtering Logic
     filtered_df = df.copy()
 
-    if selected_skills or selected_products or selected_resource_types:
-        def matches_criteria(row, skills, products, resource_types):
+    if selected_skills or selected_products or selected_resource_types or search_keyword:
+        def matches_criteria(row, skills, products, resource_types, keyword):
             row_skills = str(row['Skill(s)']).lower()
             row_products = str(row['Product(s)']).lower()
             row_res_type = str(row['Resource Type']).strip()
