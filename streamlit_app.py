@@ -81,7 +81,7 @@ try:
                 keyword_match = True
                 
             # A row only shows up if it matches ALL active criteria
-            return skill_match and product_match and res_type_match
+            return skill_match and product_match and res_type_match and keyword_match
 
         # Apply the filter mask
         mask = filtered_df.apply(lambda row: matches_criteria(row, selected_skills, selected_products, selected_resource_types), axis=1)
