@@ -84,7 +84,7 @@ try:
             return skill_match and product_match and res_type_match and keyword_match
 
         # Apply the filter mask
-        mask = filtered_df.apply(lambda row: matches_criteria(row, selected_skills, selected_products, selected_resource_types), axis=1)
+        mask = filtered_df.apply(lambda row: matches_criteria(row, selected_skills, selected_products, selected_resource_types, search_keyword), axis=1)
         filtered_df = filtered_df[mask]
 
     # 4. Display Results
