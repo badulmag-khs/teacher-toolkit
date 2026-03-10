@@ -22,6 +22,11 @@ try:
     st.write("Check the skills, products, and resource types you want to find the perfect app.")
 
     # 2. Sidebar Filters (Checklists)
+    
+    # NEW: Keyword Search Feature
+    st.sidebar.header("Search")
+    search_keyword = st.sidebar.text_input("Search by keyword (e.g., video, math, quiz):")
+    
     st.sidebar.header("What skill(s) do you want students to practice?")
     skill_options = [
         "AI", "Collaboration", "Communication", "Critical Thinking", 
@@ -65,7 +70,17 @@ try:
             
             # Check if the row's resource type matches ANY of the selected resource types
             res_type_match = (row_res_type in resource_types) if resource_types else True
-            
+
+            # 2. Check Keyword Search (Scans across multiple columns)
+            if keyword:
+                keyword = keyword.lower()
+                # Combine relevant columns into one block of text to search through
+                row_text = f"{str(row.get('App Name', ''))} {str(row.get('Description', ''))} {row_skills} {row_products} {row_res_type} {str(row.get('Resources', ''))}".lower()
+                keyword_match = keyword in row_text
+            else:
+                keyword_match = True
+                
+            # A row only shows up if it matches ALL active criteria
             return skill_match and product_match and res_type_match
 
         # Apply the filter mask
