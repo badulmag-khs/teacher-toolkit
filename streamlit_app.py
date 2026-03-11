@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import re
 
 # 1. Load and Clean the Data
 @st.cache_data
@@ -11,13 +12,18 @@ def load_data():
     df = df.fillna('') 
     return df
 
+# NEW: A function to fix Markdown links that have spaces in them
+def fix_markdown_links(text):
+    # This finds [Any Text] followed by spaces, then (Any URL) 
+    # and smashes them together into [Any Text](Any URL) so it becomes a real link.
+    return re.sub(r'\[(.*?)\]\s*\((.*?)\)', r'[\1](\2)', str(text))
+
 try:
     df = load_data()
 
     # --- CUSTOM CSS FOR COMPACT SIDEBAR & HEADERS ---
     st.markdown("""
         <style>
-            /* Reduce the vertical spacing between checkboxes */
             section[data-testid="stSidebar"] div[data-testid="stCheckbox"] {
                 min-height: 1.5rem;
                 padding-bottom: 0px !important;
@@ -27,7 +33,6 @@ try:
                 padding-top: 0px !important;
                 padding-bottom: 0px !important;
             }
-            /* Custom class for our sidebar headers to make them larger but keep them tight */
             .sidebar-header {
                 font-size: 1.15rem;
                 font-weight: 700;
@@ -41,10 +46,8 @@ try:
 
     st.title("🧰 Teacher Toolkit")
     
-    # REQUEST 1: Updated Subheader Text
     st.write("Use the filters to find the perfect app and/or resource to use with your students. If you have any questions or suggestions, please contact your ITS Team.")
 
-    # Clear Filters Logic
     def clear_filters():
         for key in st.session_state.keys():
             if key.startswith('skill_') or key.startswith('prod_') or key.startswith('res_'):
@@ -52,8 +55,7 @@ try:
             elif key == 'search_keyword':
                 st.session_state[key] = ""
 
-    # 2. Sidebar Filters (Condensed & Styled Layout)
-    
+    # 2. Sidebar Filters
     st.sidebar.markdown('<div class="sidebar-header">Search by keyword:</div>', unsafe_allow_html=True)
     search_keyword = st.sidebar.text_input("Search", label_visibility="collapsed", placeholder="e.g., video, math, quiz", key="search_keyword")
     
@@ -113,16 +115,23 @@ try:
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
                 st.info(f"**Resource Type:** {row['Resource Type']}")
                 
-            # REQUEST 3: Website URL Column
+            # Formatting the Website URL
             url_col = 'Website URL (if applicable):'
             if url_col in row and str(row[url_col]).strip() != '':
-                # Using st.markdown ensures raw URLs become clickable links automatically
-                st.markdown(f"**Website URL:** {row[url_col]}")
+                raw_url = str(row[url_col]).strip()
+                # If they just pasted an http link, make it a nice "Visit Website" hyperlink
+                if raw_url.startswith('http') and '[' not in raw_url:
+                    st.markdown(f"**Website URL:** [Visit Website]({raw_url})")
+                else:
+                    # Otherwise, run it through the fixer in case it has [text] (url)
+                    fixed_url = fix_markdown_links(raw_url)
+                    st.markdown(f"**Website URL:** {fixed_url}")
                 
-            # REQUEST 2: Markdown Resources
+            # Formatting the Resources Column
             if 'Resources' in row and str(row['Resources']).strip() != '':
-                # st.markdown perfectly parses the [Text](URL) format you used in your spreadsheet
-                st.markdown(f"**Resources:** {row['Resources']}")
+                # Run the resources through our spacing fixer
+                fixed_resources = fix_markdown_links(str(row['Resources']))
+                st.markdown(f"**Resources:** {fixed_resources}")
 
 except FileNotFoundError:
     st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
