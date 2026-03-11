@@ -13,6 +13,31 @@ def load_data():
 try:
     df = load_data()
 
+    # --- CUSTOM CSS FOR COMPACT SIDEBAR & HEADERS ---
+    st.markdown("""
+        <style>
+            /* Reduce the vertical spacing between checkboxes */
+            section[data-testid="stSidebar"] div[data-testid="stCheckbox"] {
+                min-height: 1.5rem;
+                padding-bottom: 0px !important;
+                padding-top: 0px !important;
+            }
+            section[data-testid="stSidebar"] label {
+                padding-top: 0px !important;
+                padding-bottom: 0px !important;
+            }
+            /* Custom class for our sidebar headers to make them larger but keep them tight */
+            .sidebar-header {
+                font-size: 1.15rem;
+                font-weight: 700;
+                margin-top: 15px;
+                margin-bottom: 5px;
+                color: inherit;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    # ------------------------------------------------
+
     st.title("🧰 Teacher Toolkit")
     st.write("Use the filters or the search bar below to find the perfect app.")
 
@@ -24,17 +49,16 @@ try:
             elif key == 'search_keyword':
                 st.session_state[key] = ""
 
-    # 2. Sidebar Filters (Condensed Layout)
+    # 2. Sidebar Filters (Condensed & Styled Layout)
     
-    # Combined the Search Header and Input into one element to save space
-    search_keyword = st.sidebar.text_input("**Search by keyword (e.g., video, math, quiz):**", key="search_keyword")
+    # Search input with custom HTML header
+    st.sidebar.markdown('<div class="sidebar-header">Search by keyword:</div>', unsafe_allow_html=True)
+    search_keyword = st.sidebar.text_input("Search", label_visibility="collapsed", placeholder="e.g., video, math, quiz", key="search_keyword")
     
-    # Placed the Clear button immediately after the Search input
     st.sidebar.button("Clear All Filters", on_click=clear_filters)
 
-    # Replaced st.header with bold markdown to reduce empty vertical space
-    st.sidebar.markdown("<br>", unsafe_allow_html=True) # Adds just a tiny breath of space between the button and the lists
-    st.sidebar.markdown("**What skill(s) do you want students to practice?**")
+    # Skills Checklist
+    st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
     skill_options = [
         "AI", "Collaboration", "Communication", "Critical Thinking", 
         "Creativity/Design", "Data Analysis", "Digital Literacy", 
@@ -43,13 +67,13 @@ try:
     ]
     selected_skills = [skill for skill in skill_options if st.sidebar.checkbox(skill, key=f"skill_{skill}")]
 
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    st.sidebar.markdown("**What product(s) do you want students to create?**")
+    # Products Checklist
+    st.sidebar.markdown('<div class="sidebar-header">What product(s) do you want students to create?</div>', unsafe_allow_html=True)
     product_options = ["Visual", "Auditory", "Writing", "Performance", "NA"]
     selected_products = [prod for prod in product_options if st.sidebar.checkbox(prod, key=f"prod_{prod}")]
 
-    st.sidebar.markdown("<br>", unsafe_allow_html=True)
-    st.sidebar.markdown("**What resource type do you want?**")
+    # Resource Type Checklist
+    st.sidebar.markdown('<div class="sidebar-header">What resource type do you want?</div>', unsafe_allow_html=True)
     resource_type_options = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
 
@@ -62,16 +86,10 @@ try:
             row_products = str(row['Product(s)']).lower()
             row_res_type = str(row['Resource Type']).strip()
             
-            # The row MUST contain ALL selected skills to show up
             skill_match = all(skill.lower() in row_skills for skill in skills) if skills else True
-            
-            # The row MUST contain ALL selected products to show up
             product_match = all(prod.lower() in row_products for prod in products) if products else True
-            
-            # The row can be ANY of the selected Resource Types
             res_type_match = any(row_res_type == rt for rt in resource_types) if resource_types else True
             
-            # Keyword matching
             if keyword:
                 keyword = keyword.lower()
                 row_text = f"{str(row.get('App Name', ''))} {str(row.get('Description', ''))} {row_skills} {row_products} {row_res_type} {str(row.get('Resources', ''))}".lower()
