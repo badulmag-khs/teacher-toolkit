@@ -18,18 +18,18 @@ def load_data():
 try:
     df = load_data()
 
-    st.title("🎓 Student Activity Matcher")
-    st.write("Check the skills, products, and resource types you want to find the perfect app.")
+    st.title("🧰 Teacher Toolkit")
+    st.write("Use the filters to select what skill(s), creation(s), and/or resource types to find lesson ideas for your class.  If you have any suggestions to make this tool better, email your ITS Team.")
 
     # 2. Sidebar Filters (Checklists)
     
     # NEW: Keyword Search Feature
     st.sidebar.header("Search")
-    search_keyword = st.sidebar.text_input("Search by keyword (e.g., video, math, quiz):")
+    search_keyword = st.sidebar.text_input("Search by keyword (e.g., video, collaboration, quiz, Blooket):")
     
     st.sidebar.header("What skill(s) do you want students to practice?")
     skill_options = [
-        "AI", "Collaboration", "Communication", "Critical Thinking", 
+        "AI", "Collaboration (WICOR)", "Communication", "Critical Thinking", 
         "Creativity/Design", "Data Analysis", "Digital Literacy", 
         "Organization", "Planning", "Problem-Solving", "Reading", 
         "Recall (Interactive games)", "Research", "SEL", "Time Management", "Writing", "NA"
