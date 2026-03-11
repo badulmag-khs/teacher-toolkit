@@ -12,22 +12,41 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: A robust function to force text into clickable HTML links
-def format_as_html_link(text):
+# NEW: A function that splits by comma and builds a list of clean HTML links
+def format_multiple_links(text):
     text = str(text).strip()
     if not text:
         return ""
     
-    # If the text is formatted as [Text] (URL) or [Text](URL), convert to an HTML <a> tag
-    if '[' in text and ']' in text and '(' in text and ')' in text:
-        # This regex finds the text in brackets and the URL in parentheses
-        return re.sub(r'\[(.*?)\]\s*\((.*?)\)', r'<a href="\2" target="_blank">\1</a>', text)
+    # Split the cell data by comma
+    items = [item.strip() for item in text.split(',')]
     
-    # If it's just a raw URL without brackets, make it a "Visit Website" link
-    elif text.startswith('http'):
-        return f'<a href="{text}" target="_blank">Visit Website</a>'
-        
-    return text
+    formatted_items = []
+    for item in items:
+        if not item:
+            continue
+            
+        # Check if the item is formatted as [Text](URL) or [Text] (URL)
+        match = re.search(r'\[(.*?)\]\s*\((.*?)\)', item)
+        if match:
+            link = f'<a href="{match.group(2)}" target="_blank">{match.group(1)}</a>'
+            formatted_items.append(link)
+        # Check if it's just a raw URL without brackets
+        elif item.startswith('http'):
+            formatted_items.append(f'<a href="{item}" target="_blank">Visit Website</a>')
+        else:
+            # If it's just plain text, leave it as is
+            formatted_items.append(item)
+            
+    # If there's only 1 item, just return the single link
+    if len(formatted_items) == 1:
+        return formatted_items[0]
+    
+    # If there are multiple items, format them as an HTML bulleted list
+    else:
+        bullets = "".join(f"<li>{item}</li>" for item in formatted_items)
+        return f"<ul style='margin-top: 5px; margin-bottom: 0px; padding-left: 20px;'>{bullets}</ul>"
+
 
 try:
     df = load_data()
@@ -120,7 +139,6 @@ try:
     for index, row in filtered_df.iterrows():
         with st.expander(f"💡 {row['App Name']}"):
             
-            # REQUEST 2: Highlight the Description instead of the Resource Type
             st.info(f"**Description:** {row['Description']}")
             
             st.write(f"**Skills:** {row['Skill(s)']}")
@@ -129,19 +147,17 @@ try:
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
                 st.write(f"**Resource Type:** {row['Resource Type']}")
                 
-            # REQUEST 1: Use HTML to force hyperlinked text for Website URLs
+            # Formatting the Website URL
             url_col = 'Website URL (if applicable):'
             if url_col in row and str(row[url_col]).strip() != '':
-                html_url = format_as_html_link(row[url_col])
+                # Process using our new comma-aware function
+                html_url = format_multiple_links(row[url_col])
                 st.markdown(f"**Website URL:** {html_url}", unsafe_allow_html=True)
                 
-            # REQUEST 1: Use HTML to force hyperlinked text for Resources
+            # Formatting the Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
-                html_resources = format_as_html_link(row['Resources'])
-                # Using unsafe_allow_html=True tells Streamlit to render our <a> tags as actual links
+                # Process using our new comma-aware function
+                html_resources = format_multiple_links(row['Resources'])
                 st.markdown(f"**Resources:** {html_resources}", unsafe_allow_html=True)
 
 except FileNotFoundError:
-    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
-except Exception as e:
-    st.error(f"An error occurred: {e}")
