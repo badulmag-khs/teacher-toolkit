@@ -12,39 +12,41 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: A robust function to find links separated by NEW LINES
+# NEW: A completely bulletproof link formatter
 def format_multiple_links(text):
     text = str(text).strip()
     if not text:
         return ""
     
-    formatted_items = []
+    # 1. Process all [Text](URL) formatting FIRST before splitting lines.
+    # This regex finds brackets and parentheses even if Google Sheets put a new line inside them.
+    def replacer(match):
+        # Clean up the text inside the brackets (removes accidental newlines)
+        link_text = match.group(1).replace('\n', ' ').strip()
+        if not link_text:
+            link_text = "View Resource" # Fallback if brackets are empty
+        link_url = match.group(2).strip()
+        return f'<a href="{link_url}" target="_blank">{link_text}</a>'
+        
+    # Apply the replacer to the entire block of text at once
+    text = re.sub(r'\[([^\]]*)\]\s*\(([^)]+)\)', replacer, text)
     
-    # .splitlines() automatically breaks the text apart at every new line/carriage return
+    # 2. NOW split the cleaned text by new lines
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     
+    formatted_items = []
     for line in lines:
-        # Check if this specific line has a Markdown link [Text](URL)
-        matches = re.findall(r'\[(.*?)\]\s*\((.*?)\)', line)
-        
-        if matches:
-            for text_part, url_part in matches:
-                link_text = text_part.strip()
-                link_url = url_part.strip()
-                if link_text and link_url:
-                    formatted_items.append(f'<a href="{link_url}" target="_blank">{link_text}</a>')
-        # Check if the line is just a raw website link
-        elif line.startswith('http'):
+        # 3. Check for raw website links that aren't already HTML
+        if line.startswith('http') and '<a href' not in line:
             formatted_items.append(f'<a href="{line}" target="_blank">Visit Website</a>')
-        # If it's just normal text without links, keep it as text
         else:
             formatted_items.append(line)
 
-    # Output formatting
+    # 4. Output as a clean bulleted list if there is more than 1 item
     if len(formatted_items) == 1:
         return formatted_items[0]
     elif len(formatted_items) > 1:
-        bullets = "".join(f"<li>{item}</li>" for item in formatted_items)
+        bullets = "".join(f"<li style='margin-bottom: 4px;'>{item}</li>" for item in formatted_items)
         return f"<ul style='margin-top: 5px; margin-bottom: 0px; padding-left: 20px;'>{bullets}</ul>"
     else:
         return text
