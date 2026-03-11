@@ -159,5 +159,7 @@ try:
                 # Process using our new comma-aware function
                 html_resources = format_multiple_links(row['Resources'])
                 st.markdown(f"**Resources:** {html_resources}", unsafe_allow_html=True)
-
 except FileNotFoundError:
+    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
+except Exception as e:
+    st.error(f"An error occurred: {e}")
