@@ -12,7 +12,7 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: A robust function to find ALL markdown links, even if they have commas inside the text
+# NEW: A robust function to find links separated by NEW LINES
 def format_multiple_links(text):
     text = str(text).strip()
     if not text:
@@ -20,24 +20,25 @@ def format_multiple_links(text):
     
     formatted_items = []
     
-    # 1. Search for all instances of [Text](URL) or [Text] (URL) in the entire string
-    # This ignores commas outside the brackets so it won't break your formatting
-    matches = re.findall(r'\[(.*?)\]\s*\((.*?)\)', text)
+    # .splitlines() automatically breaks the text apart at every new line/carriage return
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
     
-    if matches:
-        for text_part, url_part in matches:
-            link_text = text_part.strip()
-            link_url = url_part.strip()
-            if link_text and link_url:
-                formatted_items.append(f'<a href="{link_url}" target="_blank">{link_text}</a>')
-    else:
-        # Fallback: If no brackets are found, it checks for comma-separated raw http links
-        items = [item.strip() for item in text.split(',')]
-        for item in items:
-            if item.startswith('http'):
-                formatted_items.append(f'<a href="{item}" target="_blank">Visit Website</a>')
-            elif item:
-                formatted_items.append(item)
+    for line in lines:
+        # Check if this specific line has a Markdown link [Text](URL)
+        matches = re.findall(r'\[(.*?)\]\s*\((.*?)\)', line)
+        
+        if matches:
+            for text_part, url_part in matches:
+                link_text = text_part.strip()
+                link_url = url_part.strip()
+                if link_text and link_url:
+                    formatted_items.append(f'<a href="{link_url}" target="_blank">{link_text}</a>')
+        # Check if the line is just a raw website link
+        elif line.startswith('http'):
+            formatted_items.append(f'<a href="{line}" target="_blank">Visit Website</a>')
+        # If it's just normal text without links, keep it as text
+        else:
+            formatted_items.append(line)
 
     # Output formatting
     if len(formatted_items) == 1:
@@ -158,7 +159,6 @@ try:
                 html_resources = format_multiple_links(row['Resources'])
                 st.markdown(f"**Resources:** {html_resources}", unsafe_allow_html=True)
 
-# Important Note: Indentation below is exactly 0 spaces for except, and exactly 4 spaces for st.error
 except FileNotFoundError:
     st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
 except Exception as e:
