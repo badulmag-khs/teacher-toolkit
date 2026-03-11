@@ -6,6 +6,7 @@ import pandas as pd
 def load_data():
     file_name = 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv'
     df = pd.read_csv(file_name)
+    # Clean column names (removes hidden spaces)
     df.columns = df.columns.str.strip()
     df = df.fillna('') 
     return df
@@ -39,9 +40,11 @@ try:
     # ------------------------------------------------
 
     st.title("🧰 Teacher Toolkit")
-    st.write("Use the filters or the search bar below to find the perfect app.")
+    
+    # REQUEST 1: Updated Subheader Text
+    st.write("Use the filters to find the perfect app and/or resource to use with your students. If you have any questions or suggestions, please contact your ITS Team.")
 
-    # REQUEST 4: Clear Filters Logic
+    # Clear Filters Logic
     def clear_filters():
         for key in st.session_state.keys():
             if key.startswith('skill_') or key.startswith('prod_') or key.startswith('res_'):
@@ -51,13 +54,11 @@ try:
 
     # 2. Sidebar Filters (Condensed & Styled Layout)
     
-    # Search input with custom HTML header
     st.sidebar.markdown('<div class="sidebar-header">Search by keyword:</div>', unsafe_allow_html=True)
     search_keyword = st.sidebar.text_input("Search", label_visibility="collapsed", placeholder="e.g., video, math, quiz", key="search_keyword")
     
     st.sidebar.button("Clear All Filters", on_click=clear_filters)
 
-    # Skills Checklist
     st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
     skill_options = [
         "AI", "Collaboration", "Communication", "Critical Thinking", 
@@ -67,12 +68,10 @@ try:
     ]
     selected_skills = [skill for skill in skill_options if st.sidebar.checkbox(skill, key=f"skill_{skill}")]
 
-    # Products Checklist
     st.sidebar.markdown('<div class="sidebar-header">What product(s) do you want students to create?</div>', unsafe_allow_html=True)
     product_options = ["Visual", "Auditory", "Writing", "Performance", "NA"]
     selected_products = [prod for prod in product_options if st.sidebar.checkbox(prod, key=f"prod_{prod}")]
 
-    # Resource Type Checklist
     st.sidebar.markdown('<div class="sidebar-header">What resource type do you want?</div>', unsafe_allow_html=True)
     resource_type_options = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
@@ -114,7 +113,15 @@ try:
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
                 st.info(f"**Resource Type:** {row['Resource Type']}")
                 
+            # REQUEST 3: Website URL Column
+            url_col = 'Website URL (if applicable):'
+            if url_col in row and str(row[url_col]).strip() != '':
+                # Using st.markdown ensures raw URLs become clickable links automatically
+                st.markdown(f"**Website URL:** {row[url_col]}")
+                
+            # REQUEST 2: Markdown Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
+                # st.markdown perfectly parses the [Text](URL) format you used in your spreadsheet
                 st.markdown(f"**Resources:** {row['Resources']}")
 
 except FileNotFoundError:
