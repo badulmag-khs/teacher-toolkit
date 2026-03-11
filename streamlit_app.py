@@ -64,12 +64,12 @@ try:
         "AI", "Collaboration", "Communication", "Critical Thinking", 
         "Creativity/Design", "Data Analysis", "Digital Literacy", 
         "Organization", "Planning", "Problem-Solving", "Reading", 
-        "Recall (Interactive games)", "Research", "SEL", "Time Management", "Writing", "NA"
+        "Recall (Interactive games)", "Research", "SEL", "Time Management", "Writing"
     ]
     selected_skills = [skill for skill in skill_options if st.sidebar.checkbox(skill, key=f"skill_{skill}")]
 
     st.sidebar.markdown('<div class="sidebar-header">What product(s) do you want students to create?</div>', unsafe_allow_html=True)
-    product_options = ["Visual", "Auditory", "Writing", "Performance", "NA"]
+    product_options = ["Visual", "Auditory", "Writing", "Performance"]
     selected_products = [prod for prod in product_options if st.sidebar.checkbox(prod, key=f"prod_{prod}")]
 
     st.sidebar.markdown('<div class="sidebar-header">What resource type do you want?</div>', unsafe_allow_html=True)
