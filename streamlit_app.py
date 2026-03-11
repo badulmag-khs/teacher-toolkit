@@ -12,41 +12,41 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: A function that splits by comma and builds a list of clean HTML links
+# NEW: A robust function to find ALL markdown links, even if they have commas inside the text
 def format_multiple_links(text):
     text = str(text).strip()
     if not text:
         return ""
     
-    # Split the cell data by comma
-    items = [item.strip() for item in text.split(',')]
-    
     formatted_items = []
-    for item in items:
-        if not item:
-            continue
-            
-        # Check if the item is formatted as [Text](URL) or [Text] (URL)
-        match = re.search(r'\[(.*?)\]\s*\((.*?)\)', item)
-        if match:
-            link = f'<a href="{match.group(2)}" target="_blank">{match.group(1)}</a>'
-            formatted_items.append(link)
-        # Check if it's just a raw URL without brackets
-        elif item.startswith('http'):
-            formatted_items.append(f'<a href="{item}" target="_blank">Visit Website</a>')
-        else:
-            # If it's just plain text, leave it as is
-            formatted_items.append(item)
-            
-    # If there's only 1 item, just return the single link
+    
+    # 1. Search for all instances of [Text](URL) or [Text] (URL) in the entire string
+    # This ignores commas outside the brackets so it won't break your formatting
+    matches = re.findall(r'\[(.*?)\]\s*\((.*?)\)', text)
+    
+    if matches:
+        for text_part, url_part in matches:
+            link_text = text_part.strip()
+            link_url = url_part.strip()
+            if link_text and link_url:
+                formatted_items.append(f'<a href="{link_url}" target="_blank">{link_text}</a>')
+    else:
+        # Fallback: If no brackets are found, it checks for comma-separated raw http links
+        items = [item.strip() for item in text.split(',')]
+        for item in items:
+            if item.startswith('http'):
+                formatted_items.append(f'<a href="{item}" target="_blank">Visit Website</a>')
+            elif item:
+                formatted_items.append(item)
+
+    # Output formatting
     if len(formatted_items) == 1:
         return formatted_items[0]
-    
-    # If there are multiple items, format them as an HTML bulleted list
-    else:
+    elif len(formatted_items) > 1:
         bullets = "".join(f"<li>{item}</li>" for item in formatted_items)
         return f"<ul style='margin-top: 5px; margin-bottom: 0px; padding-left: 20px;'>{bullets}</ul>"
-
+    else:
+        return text
 
 try:
     df = load_data()
@@ -150,15 +150,15 @@ try:
             # Formatting the Website URL
             url_col = 'Website URL (if applicable):'
             if url_col in row and str(row[url_col]).strip() != '':
-                # Process using our new comma-aware function
                 html_url = format_multiple_links(row[url_col])
                 st.markdown(f"**Website URL:** {html_url}", unsafe_allow_html=True)
                 
             # Formatting the Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
-                # Process using our new comma-aware function
                 html_resources = format_multiple_links(row['Resources'])
                 st.markdown(f"**Resources:** {html_resources}", unsafe_allow_html=True)
+
+# Important Note: Indentation below is exactly 0 spaces for except, and exactly 4 spaces for st.error
 except FileNotFoundError:
     st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
 except Exception as e:
