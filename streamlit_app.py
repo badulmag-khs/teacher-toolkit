@@ -12,42 +12,43 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: A completely bulletproof link formatter
+# NEW: Native Markdown Link Formatter (fixes the squished list issue)
 def format_multiple_links(text):
     text = str(text).strip()
     if not text:
         return ""
     
-    # 1. Process all [Text](URL) formatting FIRST before splitting lines.
-    # This regex finds brackets and parentheses even if Google Sheets put a new line inside them.
+    # 1. Process all [Text](URL) or [Text] (URL) formatting
     def replacer(match):
         # Clean up the text inside the brackets (removes accidental newlines)
         link_text = match.group(1).replace('\n', ' ').strip()
         if not link_text:
-            link_text = "View Resource" # Fallback if brackets are empty
+            link_text = "View Resource" 
         link_url = match.group(2).strip()
-        return f'<a href="{link_url}" target="_blank">{link_text}</a>'
+        # Return a perfectly formatted Markdown link
+        return f'[{link_text}]({link_url})'
         
-    # Apply the replacer to the entire block of text at once
+    # Apply the replacer to fix any weird spacing in your spreadsheet links
     text = re.sub(r'\[([^\]]*)\]\s*\(([^)]+)\)', replacer, text)
     
-    # 2. NOW split the cleaned text by new lines
+    # 2. Split the cleaned text by new lines
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     
     formatted_items = []
     for line in lines:
-        # 3. Check for raw website links that aren't already HTML
-        if line.startswith('http') and '<a href' not in line:
-            formatted_items.append(f'<a href="{line}" target="_blank">Visit Website</a>')
+        # 3. Check for raw website links that aren't already formatted
+        if line.startswith('http') and '[' not in line:
+            formatted_items.append(f'[Visit Website]({line})')
         else:
             formatted_items.append(line)
 
-    # 4. Output as a clean bulleted list if there is more than 1 item
+    # 4. Output formatting using pure Markdown
     if len(formatted_items) == 1:
         return formatted_items[0]
     elif len(formatted_items) > 1:
-        bullets = "".join(f"<li style='margin-bottom: 4px;'>{item}</li>" for item in formatted_items)
-        return f"<ul style='margin-top: 5px; margin-bottom: 0px; padding-left: 20px;'>{bullets}</ul>"
+        # We add \n to force the bullets to start on a brand new line underneath the header
+        bullets = "\n".join(f"- {item}" for item in formatted_items)
+        return f"\n{bullets}"
     else:
         return text
 
@@ -153,13 +154,15 @@ try:
             # Formatting the Website URL
             url_col = 'Website URL (if applicable):'
             if url_col in row and str(row[url_col]).strip() != '':
-                html_url = format_multiple_links(row[url_col])
-                st.markdown(f"**Website URL:** {html_url}", unsafe_allow_html=True)
+                md_url = format_multiple_links(row[url_col])
+                # No more unsafe HTML tags!
+                st.markdown(f"**Website URL:** {md_url}")
                 
             # Formatting the Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
-                html_resources = format_multiple_links(row['Resources'])
-                st.markdown(f"**Resources:** {html_resources}", unsafe_allow_html=True)
+                md_resources = format_multiple_links(row['Resources'])
+                # No more unsafe HTML tags!
+                st.markdown(f"**Resources:** {md_resources}")
 
 except FileNotFoundError:
     st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
