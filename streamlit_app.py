@@ -12,11 +12,22 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: A function to fix Markdown links that have spaces in them
-def fix_markdown_links(text):
-    # This finds [Any Text] followed by spaces, then (Any URL) 
-    # and smashes them together into [Any Text](Any URL) so it becomes a real link.
-    return re.sub(r'\[(.*?)\]\s*\((.*?)\)', r'[\1](\2)', str(text))
+# NEW: A robust function to force text into clickable HTML links
+def format_as_html_link(text):
+    text = str(text).strip()
+    if not text:
+        return ""
+    
+    # If the text is formatted as [Text] (URL) or [Text](URL), convert to an HTML <a> tag
+    if '[' in text and ']' in text and '(' in text and ')' in text:
+        # This regex finds the text in brackets and the URL in parentheses
+        return re.sub(r'\[(.*?)\]\s*\((.*?)\)', r'<a href="\2" target="_blank">\1</a>', text)
+    
+    # If it's just a raw URL without brackets, make it a "Visit Website" link
+    elif text.startswith('http'):
+        return f'<a href="{text}" target="_blank">Visit Website</a>'
+        
+    return text
 
 try:
     df = load_data()
@@ -108,30 +119,27 @@ try:
 
     for index, row in filtered_df.iterrows():
         with st.expander(f"💡 {row['App Name']}"):
-            st.write(f"**Description:** {row['Description']}")
+            
+            # REQUEST 2: Highlight the Description instead of the Resource Type
+            st.info(f"**Description:** {row['Description']}")
+            
             st.write(f"**Skills:** {row['Skill(s)']}")
             st.write(f"**Products:** {row['Product(s)']}")
             
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
-                st.info(f"**Resource Type:** {row['Resource Type']}")
+                st.write(f"**Resource Type:** {row['Resource Type']}")
                 
-            # Formatting the Website URL
+            # REQUEST 1: Use HTML to force hyperlinked text for Website URLs
             url_col = 'Website URL (if applicable):'
             if url_col in row and str(row[url_col]).strip() != '':
-                raw_url = str(row[url_col]).strip()
-                # If they just pasted an http link, make it a nice "Visit Website" hyperlink
-                if raw_url.startswith('http') and '[' not in raw_url:
-                    st.markdown(f"**Website URL:** [Visit Website]({raw_url})")
-                else:
-                    # Otherwise, run it through the fixer in case it has [text] (url)
-                    fixed_url = fix_markdown_links(raw_url)
-                    st.markdown(f"**Website URL:** {fixed_url}")
+                html_url = format_as_html_link(row[url_col])
+                st.markdown(f"**Website URL:** {html_url}", unsafe_allow_html=True)
                 
-            # Formatting the Resources Column
+            # REQUEST 1: Use HTML to force hyperlinked text for Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
-                # Run the resources through our spacing fixer
-                fixed_resources = fix_markdown_links(str(row['Resources']))
-                st.markdown(f"**Resources:** {fixed_resources}")
+                html_resources = format_as_html_link(row['Resources'])
+                # Using unsafe_allow_html=True tells Streamlit to render our <a> tags as actual links
+                st.markdown(f"**Resources:** {html_resources}", unsafe_allow_html=True)
 
 except FileNotFoundError:
     st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
