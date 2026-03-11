@@ -4,32 +4,42 @@ import pandas as pd
 # 1. Load and Clean the Data
 @st.cache_data
 def load_data():
-    # Make sure this filename matches your uploaded file exactly
-    file_name = 'your_spreadsheet.csv'
+    file_name = 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv'
     df = pd.read_csv(file_name)
-    
-    # Clean column names (removes hidden spaces like 'Resource Type ')
     df.columns = df.columns.str.strip()
-    
-    # Fill empty cells with an empty string so the filter doesn't crash
     df = df.fillna('') 
     return df
 
 try:
     df = load_data()
 
+    # REQUEST 1: New Title and Emoji
     st.title("🧰 Teacher Toolkit")
-    st.write("Use the filters to select what skill(s), creation(s), and/or resource types to find lesson ideas for your class.  If you have any suggestions to make this tool better, email your ITS Team.")
+    st.write("Use the filters or the search bar below to find the perfect app.")
 
-    # 2. Sidebar Filters (Checklists)
-    
-    # NEW: Keyword Search Feature
+    # REQUEST 4: Clear Filters Logic
+    # This function resets all the saved inputs back to their default state
+    def clear_filters():
+        for key in st.session_state.keys():
+            if key.startswith('skill_') or key.startswith('prod_') or key.startswith('res_'):
+                st.session_state[key] = False
+            elif key == 'search_keyword':
+                st.session_state[key] = ""
+
+    # Place the clear button at the very top of the sidebar
+    st.sidebar.button("Clear All Filters", on_click=clear_filters)
+    st.sidebar.divider()
+
+    # 2. Sidebar Filters
     st.sidebar.header("Search")
-    search_keyword = st.sidebar.text_input("Search by keyword (e.g., video, collaboration, quiz, Blooket):")
-    
+    # Note the added 'key' parameter so the Clear button knows how to reset it
+    search_keyword = st.sidebar.text_input("Search by keyword (e.g., video, math, quiz):", key="search_keyword")
+
+    st.sidebar.divider()
+
     st.sidebar.header("What skill(s) do you want students to practice?")
     skill_options = [
-        "AI", "Collaboration (WICOR)", "Communication", "Critical Thinking", 
+        "AI", "Collaboration", "Communication", "Critical Thinking", 
         "Creativity/Design", "Data Analysis", "Digital Literacy", 
         "Organization", "Planning", "Problem-Solving", "Reading", 
         "Recall (Interactive games)", "Research", "SEL", "Time Management", "Writing", "NA"
@@ -44,13 +54,8 @@ try:
 
     st.sidebar.divider()
 
-    # NEW: Dynamic Resource Type Filter
     st.sidebar.header("What resource type do you want?")
-    
-    # This automatically finds all unique resource types in your CSV (ignoring blank cells)
     resource_type_options = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
-    
-    # Generate checkboxes for each unique resource type
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
 
     # 3. Filtering Logic
@@ -62,28 +67,28 @@ try:
             row_products = str(row['Product(s)']).lower()
             row_res_type = str(row['Resource Type']).strip()
             
-            # Check if ANY selected skill is inside the row's skills string
-            skill_match = any(skill.lower() in row_skills for skill in skills) if skills else True
+            # REQUEST 2: Strict "AND" Filtering using `all()` instead of `any()`
+            # The row MUST contain ALL selected skills to show up
+            skill_match = all(skill.lower() in row_skills for skill in skills) if skills else True
             
-            # Check if ANY selected product is inside the row's products string
-            product_match = any(prod.lower() in row_products for prod in products) if products else True
+            # The row MUST contain ALL selected products to show up
+            product_match = all(prod.lower() in row_products for prod in products) if products else True
             
-            # Check if the row's resource type matches ANY of the selected resource types
-            res_type_match = (row_res_type in resource_types) if resource_types else True
-
-            # 2. Check Keyword Search (Scans across multiple columns)
+            # The row can be ANY of the selected Resource Types 
+            # (since a single app is rarely multiple resource types in the sheet)
+            res_type_match = any(row_res_type == rt for rt in resource_types) if resource_types else True
+            
+            # Keyword matching remains the same
             if keyword:
                 keyword = keyword.lower()
-                # Combine relevant columns into one block of text to search through
                 row_text = f"{str(row.get('App Name', ''))} {str(row.get('Description', ''))} {row_skills} {row_products} {row_res_type} {str(row.get('Resources', ''))}".lower()
                 keyword_match = keyword in row_text
             else:
                 keyword_match = True
-                
-            # A row only shows up if it matches ALL active criteria
+            
+            # Final Check: All activated categories must be a match
             return skill_match and product_match and res_type_match and keyword_match
 
-        # Apply the filter mask
         mask = filtered_df.apply(lambda row: matches_criteria(row, selected_skills, selected_products, selected_resource_types, search_keyword), axis=1)
         filtered_df = filtered_df[mask]
 
@@ -91,7 +96,8 @@ try:
     st.subheader(f"Found {len(filtered_df)} match(es)")
 
     for index, row in filtered_df.iterrows():
-        with st.expander(f"⭐ {row['App Name']}"):
+        # REQUEST 3: Replaced the ⭐ with a 💡
+        with st.expander(f"💡 {row['App Name']}"):
             st.write(f"**Description:** {row['Description']}")
             st.write(f"**Skills:** {row['Skill(s)']}")
             st.write(f"**Products:** {row['Product(s)']}")
@@ -99,9 +105,7 @@ try:
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
                 st.info(f"**Resource Type:** {row['Resource Type']}")
                 
-            # NEW: Displaying the Resources column
             if 'Resources' in row and str(row['Resources']).strip() != '':
-                # Using st.markdown ensures that if you put URLs or markdown links in your CSV, they become clickable.
                 st.markdown(f"**Resources:** {row['Resources']}")
 
 except FileNotFoundError:
