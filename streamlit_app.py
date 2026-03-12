@@ -92,9 +92,10 @@ try:
 
     st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
     
+    # UPDATED: Added "Communication" above "Critical Thinking"
     skill_options = [
         "Writing (WICOR)", "Inquiry (WICOR)", "Collaboration (WICOR)", "Reading (WICOR)",
-        "AI", "Creativity/Design", "Critical Thinking", "Data Analysis", 
+        "AI", "Creativity/Design", "Communication", "Critical Thinking", "Data Analysis", 
         "Digital Literacy", "Organization", "Planning", "Problem-Solving", 
         "Recall (Interactive Games)", "Research", "SEL", "Time Management"
     ]
@@ -106,7 +107,6 @@ try:
 
     st.sidebar.markdown('<div class="sidebar-header">What resource type do you want?</div>', unsafe_allow_html=True)
     
-    # NEW: Grab unique types, but rename "Strategy" to "Strategy (Offline Activities)" for the sidebar
     raw_resource_types = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
     resource_type_options = ["Strategy (Offline Activities)" if rt == "Strategy" else rt for rt in raw_resource_types]
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
@@ -126,7 +126,7 @@ try:
             
             product_match = all(prod.lower() in row_products for prod in products) if products else True
             
-            # NEW: Smart filter for resource types (strips out the new label addition so it matches the spreadsheet)
+            # Smart filter for resource types
             clean_res_types = [rt.replace(" (Offline Activities)", "").strip() for rt in resource_types]
             res_type_match = any(row_res_type == rt for rt in clean_res_types) if clean_res_types else True
             
