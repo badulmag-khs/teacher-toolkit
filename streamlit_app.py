@@ -2,11 +2,14 @@ import streamlit as st
 import pandas as pd
 import re
 
-# 1. Load and Clean the Data
-@st.cache_data
+# 1. Load and Clean the Data (NOW WITH LIVE GOOGLE SHEETS SYNC!)
+# The ttl=600 tells the app to check Google Sheets for updates every 10 minutes
+@st.cache_data(ttl=600)
 def load_data():
-    file_name = 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv'
-    df = pd.read_csv(file_name)
+    # PASTE YOUR "PUBLISH TO WEB" CSV LINK RIGHT HERE:
+    sheet_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_CwTgfww5JK_bmrqWo4xkhmAX60qEGAoxOabCm2fDNSmHG6e5IKirvZwmw1t5SASHQc5dec-8dWCN/pub?gid=754111021&single=true&output=csv'
+    
+    df = pd.read_csv(sheet_url)
     # Clean column names (removes hidden spaces)
     df.columns = df.columns.str.strip()
     df = df.fillna('') 
@@ -92,7 +95,6 @@ try:
 
     st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
     
-    # UPDATED: Moved "Communication" above "Creativity/Design"
     skill_options = [
         "Writing (WICOR)", "Inquiry (WICOR)", "Collaboration (WICOR)", "Reading (WICOR)",
         "AI", "Communication", "Creativity/Design", "Critical Thinking", "Data Analysis", 
@@ -168,6 +170,6 @@ try:
                 st.markdown(f"**Resources:** {md_resources}")
 
 except FileNotFoundError:
-    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
+    st.error("Could not find the file. If you are using Google Sheets, make sure your URL is correct!")
 except Exception as e:
     st.error(f"An error occurred: {e}")
