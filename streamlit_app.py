@@ -163,4 +163,6 @@ try:
                 st.markdown(f"**Resources:** {md_resources}")
 
 except FileNotFoundError:
-    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is
+    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
+except Exception as e:
+    st.error(f"An error occurred: {e}")
