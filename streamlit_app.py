@@ -12,15 +12,14 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: Fixed Markdown Link Formatter with Double Line Breaks
+# Fixed Markdown Link Formatter with Double Line Breaks
 def format_multiple_links(text):
     text = str(text).strip()
     if not text:
         return ""
     
-    # 1. Process all [Text](URL) or [Text] (URL) formatting
+    # Process all [Text](URL) or [Text] (URL) formatting
     def replacer(match):
-        # Clean up the text inside the brackets
         link_text = match.group(1).replace('\n', ' ').strip()
         if not link_text:
             link_text = "View Resource" 
@@ -29,7 +28,7 @@ def format_multiple_links(text):
         
     text = re.sub(r'\[([^\]]*)\]\s*\(([^)]+)\)', replacer, text)
     
-    # 2. Split the cleaned text by new lines
+    # Split the cleaned text by new lines
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     
     formatted_items = []
@@ -39,12 +38,10 @@ def format_multiple_links(text):
         else:
             formatted_items.append(line)
 
-    # 3. Output formatting using pure Markdown
+    # Output formatting using pure Markdown
     if len(formatted_items) == 1:
         return formatted_items[0]
     elif len(formatted_items) > 1:
-        # THE FIX: We use \n\n to create a true blank line before the list starts.
-        # This forces Streamlit to render it as a real bulleted list instead of a paragraph.
         bullets = "\n".join(f"- {item}" for item in formatted_items)
         return f"\n\n{bullets}"
     else:
@@ -94,11 +91,13 @@ try:
     st.sidebar.button("Clear All Filters", on_click=clear_filters)
 
     st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
+    
+    # NEW: Updated and reordered skills list
     skill_options = [
-        "AI", "Collaboration", "Communication", "Critical Thinking", 
-        "Creativity/Design", "Data Analysis", "Digital Literacy", 
-        "Organization", "Planning", "Problem-Solving", "Reading", 
-        "Recall (Interactive games)", "Research", "SEL", "Time Management", "Writing"
+        "Writing (WICOR)", "Inquiry (WICOR)", "Collaboration (WICOR)", "Reading (WICOR)",
+        "AI", "Critical Thinking", "Creativity/Design", "Data Analysis", 
+        "Digital Literacy", "Organization", "Planning", "Problem-Solving", 
+        "Recall (Interactive Games)", "Research", "SEL", "Time Management"
     ]
     selected_skills = [skill for skill in skill_options if st.sidebar.checkbox(skill, key=f"skill_{skill}")]
 
@@ -119,7 +118,10 @@ try:
             row_products = str(row['Product(s)']).lower()
             row_res_type = str(row['Resource Type']).strip()
             
-            skill_match = all(skill.lower() in row_skills for skill in skills) if skills else True
+            # SMART FILTER: Strips out "(wicor)" before checking the spreadsheet so the filter doesn't break
+            clean_skills = [s.lower().replace(" (wicor)", "").strip() for s in skills]
+            skill_match = all(clean_skill in row_skills for clean_skill in clean_skills) if clean_skills else True
+            
             product_match = all(prod.lower() in row_products for prod in products) if products else True
             res_type_match = any(row_res_type == rt for rt in resource_types) if resource_types else True
             
@@ -161,6 +163,4 @@ try:
                 st.markdown(f"**Resources:** {md_resources}")
 
 except FileNotFoundError:
-    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is in the same folder as this script.")
-except Exception as e:
-    st.error(f"An error occurred: {e}")
+    st.error("Could not find the file. Please ensure 'Apps and Resources - KHS Instructional Tech Central - Apps and Resources.csv' is
