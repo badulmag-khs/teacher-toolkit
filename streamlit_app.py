@@ -92,7 +92,6 @@ try:
 
     st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
     
-    # UPDATED: Swapped Creativity/Design and Critical Thinking
     skill_options = [
         "Writing (WICOR)", "Inquiry (WICOR)", "Collaboration (WICOR)", "Reading (WICOR)",
         "AI", "Creativity/Design", "Critical Thinking", "Data Analysis", 
@@ -106,7 +105,10 @@ try:
     selected_products = [prod for prod in product_options if st.sidebar.checkbox(prod, key=f"prod_{prod}")]
 
     st.sidebar.markdown('<div class="sidebar-header">What resource type do you want?</div>', unsafe_allow_html=True)
-    resource_type_options = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
+    
+    # NEW: Grab unique types, but rename "Strategy" to "Strategy (Offline Activities)" for the sidebar
+    raw_resource_types = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
+    resource_type_options = ["Strategy (Offline Activities)" if rt == "Strategy" else rt for rt in raw_resource_types]
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
 
     # 3. Filtering Logic
@@ -118,11 +120,15 @@ try:
             row_products = str(row['Product(s)']).lower()
             row_res_type = str(row['Resource Type']).strip()
             
+            # Smart filter for skills
             clean_skills = [s.lower().replace(" (wicor)", "").strip() for s in skills]
             skill_match = all(clean_skill in row_skills for clean_skill in clean_skills) if clean_skills else True
             
             product_match = all(prod.lower() in row_products for prod in products) if products else True
-            res_type_match = any(row_res_type == rt for rt in resource_types) if resource_types else True
+            
+            # NEW: Smart filter for resource types (strips out the new label addition so it matches the spreadsheet)
+            clean_res_types = [rt.replace(" (Offline Activities)", "").strip() for rt in resource_types]
+            res_type_match = any(row_res_type == rt for rt in clean_res_types) if clean_res_types else True
             
             if keyword:
                 keyword = keyword.lower()
