@@ -82,12 +82,7 @@ try:
             elif key == 'search_keyword':
                 st.session_state[key] = ""
 
-    # 2. Sidebar Filters & Buttons
-    
-    # NEW: Suggest a Resource Button
-    st.sidebar.link_button("💡 Suggest a New Tool", "https://docs.google.com/forms/d/e/1FAIpQLSeDrN6AktILFL2N6TRPjvMFcQhWRR16C_XBhMtEBKWOXfHzVQ/viewform?usp=header", use_container_width=True)
-    st.sidebar.divider()
-
+    # 2. Sidebar Filters
     st.sidebar.markdown('<div class="sidebar-header">Search by keyword:</div>', unsafe_allow_html=True)
     search_keyword = st.sidebar.text_input("Search", label_visibility="collapsed", placeholder="e.g., video, math, quiz", key="search_keyword")
     
@@ -112,6 +107,10 @@ try:
     raw_resource_types = sorted([rt for rt in df['Resource Type'].unique() if str(rt).strip() != ''])
     resource_type_options = ["Strategy (Offline Activities)" if rt == "Strategy" else rt for rt in raw_resource_types]
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
+
+    # MOVED: Suggest a Resource Button is now at the bottom of the sidebar
+    st.sidebar.divider()
+    st.sidebar.link_button("💡 Suggest a New Tool", "https://docs.google.com/forms/d/e/1FAIpQLSeDrN6AktILFL2N6TRPjvMFcQhWRR16C_XBhMtEBKWOXfHzVQ/viewform?usp=header", use_container_width=True)
 
     # 3. Filtering Logic
     filtered_df = df.copy()
