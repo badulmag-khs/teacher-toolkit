@@ -6,7 +6,7 @@ import re
 @st.cache_data(ttl=600)
 def load_data():
     # PASTE YOUR "PUBLISH TO WEB" CSV LINK RIGHT HERE:
-    sheet_url = 'https://docs.google.com/spreadsheets/d/e/YOUR_LINK_HERE/pub?output=csv'
+    sheet_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_CwTgfww5JK_bmrqWo4xkhmAX60qEGAoxOabCm2fDNSmHG6e5IKirvZwmw1t5SASHQc5dec-8dWCN/pub?gid=754111021&single=true&output=csv'
     
     df = pd.read_csv(sheet_url)
     df.columns = df.columns.str.strip()
@@ -110,7 +110,7 @@ try:
     selected_resource_types = [rt for rt in resource_type_options if st.sidebar.checkbox(rt, key=f"res_{rt}")]
 
     st.sidebar.divider()
-    st.sidebar.link_button("💡 Suggest a New Tool", "https://YOUR_GOOGLE_FORM_LINK_HERE", use_container_width=True)
+    st.sidebar.link_button("💡 Suggest a New Tool", "https://docs.google.com/forms/d/e/1FAIpQLSeDrN6AktILFL2N6TRPjvMFcQhWRR16C_XBhMtEBKWOXfHzVQ/viewform?usp=header", use_container_width=True)
 
     # 3. Filtering Logic
     filtered_df = df.copy()
