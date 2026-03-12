@@ -12,7 +12,7 @@ def load_data():
     df = df.fillna('') 
     return df
 
-# NEW: Native Markdown Link Formatter (fixes the squished list issue)
+# NEW: Fixed Markdown Link Formatter with Double Line Breaks
 def format_multiple_links(text):
     text = str(text).strip()
     if not text:
@@ -20,15 +20,13 @@ def format_multiple_links(text):
     
     # 1. Process all [Text](URL) or [Text] (URL) formatting
     def replacer(match):
-        # Clean up the text inside the brackets (removes accidental newlines)
+        # Clean up the text inside the brackets
         link_text = match.group(1).replace('\n', ' ').strip()
         if not link_text:
             link_text = "View Resource" 
         link_url = match.group(2).strip()
-        # Return a perfectly formatted Markdown link
         return f'[{link_text}]({link_url})'
         
-    # Apply the replacer to fix any weird spacing in your spreadsheet links
     text = re.sub(r'\[([^\]]*)\]\s*\(([^)]+)\)', replacer, text)
     
     # 2. Split the cleaned text by new lines
@@ -36,19 +34,19 @@ def format_multiple_links(text):
     
     formatted_items = []
     for line in lines:
-        # 3. Check for raw website links that aren't already formatted
         if line.startswith('http') and '[' not in line:
             formatted_items.append(f'[Visit Website]({line})')
         else:
             formatted_items.append(line)
 
-    # 4. Output formatting using pure Markdown
+    # 3. Output formatting using pure Markdown
     if len(formatted_items) == 1:
         return formatted_items[0]
     elif len(formatted_items) > 1:
-        # We add \n to force the bullets to start on a brand new line underneath the header
+        # THE FIX: We use \n\n to create a true blank line before the list starts.
+        # This forces Streamlit to render it as a real bulleted list instead of a paragraph.
         bullets = "\n".join(f"- {item}" for item in formatted_items)
-        return f"\n{bullets}"
+        return f"\n\n{bullets}"
     else:
         return text
 
@@ -155,13 +153,11 @@ try:
             url_col = 'Website URL (if applicable):'
             if url_col in row and str(row[url_col]).strip() != '':
                 md_url = format_multiple_links(row[url_col])
-                # No more unsafe HTML tags!
                 st.markdown(f"**Website URL:** {md_url}")
                 
             # Formatting the Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
                 md_resources = format_multiple_links(row['Resources'])
-                # No more unsafe HTML tags!
                 st.markdown(f"**Resources:** {md_resources}")
 
 except FileNotFoundError:
