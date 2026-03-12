@@ -92,10 +92,10 @@ try:
 
     st.sidebar.markdown('<div class="sidebar-header">What skill(s) do you want students to practice?</div>', unsafe_allow_html=True)
     
-    # UPDATED: Added "Communication" above "Critical Thinking"
+    # UPDATED: Moved "Communication" above "Creativity/Design"
     skill_options = [
         "Writing (WICOR)", "Inquiry (WICOR)", "Collaboration (WICOR)", "Reading (WICOR)",
-        "AI", "Creativity/Design", "Communication", "Critical Thinking", "Data Analysis", 
+        "AI", "Communication", "Creativity/Design", "Critical Thinking", "Data Analysis", 
         "Digital Literacy", "Organization", "Planning", "Problem-Solving", 
         "Recall (Interactive Games)", "Research", "SEL", "Time Management"
     ]
