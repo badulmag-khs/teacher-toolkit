@@ -2,15 +2,13 @@ import streamlit as st
 import pandas as pd
 import re
 
-# 1. Load and Clean the Data (NOW WITH LIVE GOOGLE SHEETS SYNC!)
-# The ttl=600 tells the app to check Google Sheets for updates every 10 minutes
+# 1. Load and Clean the Data (Live Google Sheets Sync)
 @st.cache_data(ttl=600)
 def load_data():
     # PASTE YOUR "PUBLISH TO WEB" CSV LINK RIGHT HERE:
-    sheet_url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_CwTgfww5JK_bmrqWo4xkhmAX60qEGAoxOabCm2fDNSmHG6e5IKirvZwmw1t5SASHQc5dec-8dWCN/pub?gid=754111021&single=true&output=csv'
+    sheet_url = 'https://docs.google.com/spreadsheets/d/e/YOUR_LINK_HERE/pub?output=csv'
     
     df = pd.read_csv(sheet_url)
-    # Clean column names (removes hidden spaces)
     df.columns = df.columns.str.strip()
     df = df.fillna('') 
     return df
@@ -21,7 +19,6 @@ def format_multiple_links(text):
     if not text:
         return ""
     
-    # Process all [Text](URL) or [Text] (URL) formatting
     def replacer(match):
         link_text = match.group(1).replace('\n', ' ').strip()
         if not link_text:
@@ -31,7 +28,6 @@ def format_multiple_links(text):
         
     text = re.sub(r'\[([^\]]*)\]\s*\(([^)]+)\)', replacer, text)
     
-    # Split the cleaned text by new lines
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     
     formatted_items = []
@@ -41,7 +37,6 @@ def format_multiple_links(text):
         else:
             formatted_items.append(line)
 
-    # Output formatting using pure Markdown
     if len(formatted_items) == 1:
         return formatted_items[0]
     elif len(formatted_items) > 1:
@@ -87,7 +82,12 @@ try:
             elif key == 'search_keyword':
                 st.session_state[key] = ""
 
-    # 2. Sidebar Filters
+    # 2. Sidebar Filters & Buttons
+    
+    # NEW: Suggest a Resource Button
+    st.sidebar.link_button("💡 Suggest a New Tool", "https://YOUR_GOOGLE_FORM_LINK_HERE", use_container_width=True)
+    st.sidebar.divider()
+
     st.sidebar.markdown('<div class="sidebar-header">Search by keyword:</div>', unsafe_allow_html=True)
     search_keyword = st.sidebar.text_input("Search", label_visibility="collapsed", placeholder="e.g., video, math, quiz", key="search_keyword")
     
@@ -122,13 +122,11 @@ try:
             row_products = str(row['Product(s)']).lower()
             row_res_type = str(row['Resource Type']).strip()
             
-            # Smart filter for skills
             clean_skills = [s.lower().replace(" (wicor)", "").strip() for s in skills]
             skill_match = all(clean_skill in row_skills for clean_skill in clean_skills) if clean_skills else True
             
             product_match = all(prod.lower() in row_products for prod in products) if products else True
             
-            # Smart filter for resource types
             clean_res_types = [rt.replace(" (Offline Activities)", "").strip() for rt in resource_types]
             res_type_match = any(row_res_type == rt for rt in clean_res_types) if clean_res_types else True
             
@@ -158,18 +156,15 @@ try:
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
                 st.write(f"**Resource Type:** {row['Resource Type']}")
                 
-            # Formatting the Website URL
-            url_col = 'Website URL (if applicable):'
-            if url_col in row and str(row[url_col]).strip() != '':
-                md_url = format_multiple_links(row[url_col])
+            if 'Website URL (if applicable):' in row and str(row['Website URL (if applicable):']).strip() != '':
+                md_url = format_multiple_links(row['Website URL (if applicable):'])
                 st.markdown(f"**Website URL:** {md_url}")
                 
-            # Formatting the Resources
             if 'Resources' in row and str(row['Resources']).strip() != '':
                 md_resources = format_multiple_links(row['Resources'])
                 st.markdown(f"**Resources:** {md_resources}")
 
 except FileNotFoundError:
-    st.error("Could not find the file. If you are using Google Sheets, make sure your URL is correct!")
+    st.error("Could not find the data. If you are using Google Sheets, make sure your URL is correct!")
 except Exception as e:
     st.error(f"An error occurred: {e}")
