@@ -155,8 +155,8 @@ try:
             if 'Resource Type' in row and str(row['Resource Type']).strip() != '':
                 st.write(f"**Resource Type:** {row['Resource Type']}")
                 
-            if 'Website URL (if applicable):' in row and str(row['Website URL (if applicable):']).strip() != '':
-                md_url = format_multiple_links(row['Website URL (if applicable):'])
+            if 'Website (if applicable):' in row and str(row['Website (if applicable):']).strip() != '':
+                md_url = format_multiple_links(row['Website (if applicable):'])
                 st.markdown(f"**Website:** {md_url}")
                 
             if 'Resources' in row and str(row['Resources']).strip() != '':
