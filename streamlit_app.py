@@ -157,7 +157,7 @@ try:
                 
             if 'Website URL (if applicable):' in row and str(row['Website URL (if applicable):']).strip() != '':
                 md_url = format_multiple_links(row['Website URL (if applicable):'])
-                st.markdown(f"**Website URL:** {md_url}")
+                st.markdown(f"**Website:** {md_url}")
                 
             if 'Resources' in row and str(row['Resources']).strip() != '':
                 md_resources = format_multiple_links(row['Resources'])
